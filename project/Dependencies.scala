@@ -57,7 +57,10 @@ object Dependencies {
     "org.pac4j" % "pac4j"  % pac4jVersion changing(),
     "org.pac4j" % "pac4j-kerberos" % pac4jVersion changing(),
     "org.pac4j" % "pac4j-core" % pac4jVersion changing(),
-    "org.pac4j" % "pac4j-http" % pac4jVersion changing()
+    "org.pac4j" % "pac4j-http" % pac4jVersion changing(),
+    "org.pac4j" % "pac4j-openid" % "2.0.0" exclude("xml-apis" , "xml-apis"),
+    "org.pac4j" % "pac4j-oauth" % "2.0.0",
+    "org.pac4j" % "pac4j-oidc" % "2.2.0"
   )
 
   val rxScala = "io.reactivex" %% "rxscala" % "0.22.0"

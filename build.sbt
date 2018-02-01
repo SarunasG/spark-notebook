@@ -208,6 +208,8 @@ libraryDependencies += scalaTest
 // P.S. Using static controllers with the static routes generator is not deprecated,
 // but it is recommended that you migrate to using classes with dependency injection.
 routesGenerator := StaticRoutesGenerator
+//routesGenerator := InjectedRoutesGenerator
+
 
 libraryDependencies ++= List(
   akka,

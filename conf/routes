@@ -63,6 +63,7 @@ GET            /dockers                                  controllers.Application
 
 
 # Pac4j Authentication
+GET           /                                 @controllers.ApplicationWithFilter.oidcLogin()
 GET           /loginForm                        controllers.Application.loginForm()
 GET           /callback                         @org.pac4j.play.CallbackController.callback()
 POST          /callback                         @org.pac4j.play.CallbackController.callback()

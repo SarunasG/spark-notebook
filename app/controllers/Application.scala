@@ -3,6 +3,7 @@ package controllers
 import java.io.File
 import java.net.URLDecoder
 import java.util.UUID
+import javax.inject.Inject
 
 import akka.actor._
 import akka.pattern.ask
@@ -11,9 +12,11 @@ import notebook.NBSerializer.Metadata
 import notebook.io.Version
 import notebook.server._
 import notebook.{GenericFile, NotebookResource, Repository, _}
+import org.pac4j.core.config.Config
 import org.pac4j.core.profile.{CommonProfile, ProfileManager}
 import org.pac4j.play.PlayWebContext
 import org.pac4j.play.store.PlaySessionStore
+import org.pac4j.play.scala.Security
 import play.api.Play.current
 import play.api._
 import play.api.http.HeaderNames
@@ -21,7 +24,8 @@ import play.api.libs.iteratee.Concurrent.Channel
 import play.api.libs.iteratee._
 import play.api.libs.json._
 import play.api.mvc._
-import utils.{SbtProjectGenUtils, AppUtils}
+import play.libs.concurrent.HttpExecutionContext
+import utils.{AppUtils, SbtProjectGenUtils}
 import utils.Const.UTF_8
 
 import scala.concurrent.duration._
@@ -54,10 +58,13 @@ object ApplicationHacks {
   var playPac4jSessionStoreOption: Option[PlaySessionStore] = None
 }
 
-object Application extends Controller {
+import scala.collection.JavaConversions._
+
+  object Application extends Controller {
+//class Application @Inject() (val conf: Config, val playSessionStore: PlaySessionStore, override val ec: HttpExecutionContext) extends Controller with Security[CommonProfile] {
   import Notebook.notebookName
 
-  private lazy val config = AppUtils.notebookConfig
+  private lazy val config : NotebookConfig = AppUtils.notebookConfig
   private lazy val notebookManager = AppUtils.notebookManager
   private val kernelIdToCalcService = new collection.concurrent.TrieMap[String, CalcWebSocketService]()
   private val kernelIdToObservableActor = new collection.concurrent.TrieMap[String, ActorRef]()
@@ -95,15 +102,16 @@ object Application extends Controller {
     Ok(views.html.loginForm.render(callbackUrl))
   }
 
-  private def getProfile(implicit request: RequestHeader): Option[CommonProfile] = {
-    ApplicationHacks.playPac4jSessionStoreOption.flatMap { pac4jSessionStore =>
-      import scala.collection.JavaConversions._
-      val webContext = new PlayWebContext(request, pac4jSessionStore)
-      val profileManager = new ProfileManager[CommonProfile](webContext)
-      val profiles = profileManager.getAll(true)
-      asScalaBuffer(profiles).headOption
+    private def getProfile(implicit request: RequestHeader): Option[CommonProfile] = {
+      ApplicationHacks.playPac4jSessionStoreOption.flatMap { pac4jSessionStore =>
+        import scala.collection.JavaConversions._
+        val webContext = new PlayWebContext(request, pac4jSessionStore)
+        val profileManager = new ProfileManager[CommonProfile](webContext)
+        val profiles = profileManager.getAll(true)
+        asScalaBuffer(profiles).headOption
+      }
     }
-  }
+
 
   private def getCurrentUserName(implicit request: RequestHeader): String = {
     getProfile.map(_.getId).getOrElse("")
@@ -820,3 +828,16 @@ object Application extends Controller {
   }
 
 }
+
+
+/*class Application @Inject() (val config: Config, val playSessionStore: PlaySessionStore, override val ec: HttpExecutionContext) extends Controller with Security[CommonProfile]{
+
+  def oidcTest = Secure("OidcClient") { profiles =>
+
+    Action { implicit request =>
+      //val callbackUrl = "/callback?client_name=OidcClient"
+      Ok(views.html.protectedIndex(profiles))
+    }
+  }
+
+}*/
